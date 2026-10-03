@@ -19,3 +19,13 @@
 - Reviewer's final check on 4d44098: unit tests 17/17; analyst probes 122 passed / 0 failed / 0 skipped (--peer, --stage1-url, Playwright browser probes, stage-1 regression); shipped checks isolated: stage 1 147/147 and stage 2 35/35, claimed stage: 2 (the next-stage line fails as expected); clean build/run at 2 vCPU / 2 GiB; stage-1/ unchanged since d1be8d8; visual review at 375 px and desktop
 - Review notes and decisions: (1) /requests Pay always paid publicly — fixed in 4d44098 (public/private choice); (2) hold headlines on /authorizations ignored status — fixed in 4d44098. Both forwarded to the analyst as stage-3 ledger rows. Ledger gaps found by the implementer (incoming-list/outgoing-list present when empty; /login and /signup render for a signed-in browser) were implemented from the spec
 - Accepted commit: 4d44098c61189db50126c0151276aca3524da292
+
+## Stage 3 — statements and payment corrections — ACCEPTED
+
+- Start / end (UTC): 2026-10-03 11:44 / 12:34
+- Review rounds: 1 (r1 accept at 425311d; r2 accept of the follow-up fix commit 88070ae)
+- Rejections: none
+- Ledger: 104 rows at d7ef925 (+ stage-2 review-note rows at f1055c3; 106 rows in the final check), 89 ★ rows; every row has a probe except 7 with a manual component (earlier-suite re-run, stage-1/2 export imports needing earlier services, reading-only rows). Known gaps: 0
+- Reviewer's final check on 88070ae: unit tests 21/21; analyst probes 132 passed / 0 failed / 2 skipped (browser; run on host: stage-3 UI 2/2, stage-2 UI 19/19) with --peer, --stage1-url, --stage2-url; shipped checks isolated: stage 1 147/147, stage 2 35/35, stage 3 6/6, claimed stage: 3 (next-stage line fails as expected); clean build/run at 2 vCPU / 2 GiB; stage-1/ and stage-2/ unchanged; reviewer's 3000-payment / 2000 statement reads / 50 in flight scenario: 70 MiB, no crash
+- Review notes and decisions: (1) statement snapshots stored fully materialised and kept forever — heap exhaustion crash under load; fixed in 88070ae (compact snapshots recomputed on demand, heap limit 1536 MB), also forwarded to the analyst as a stage-4 ledger row and probe (S4-071). Stage-2 notes (Pay visibility, hold headlines) were already fixed in stage 2 and carried as stage-3 rows/probes
+- Accepted commit: 88070ae781bba8153539138f315f8f72de822952
