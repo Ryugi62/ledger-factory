@@ -1,0 +1,12 @@
+{
+  "name": "pocketful-stage-1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pocketful stage 1: wallet and payments HTTP API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" }
+}
