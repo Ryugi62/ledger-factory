@@ -78,6 +78,7 @@ export function requestsPage(main, me) {
 
   async function act(button, action, q, visibility) {
     done.clear();
+    let uncertain = false;
     let attempt = null;
     if (action === 'pay') {
       if (!payments.has(q.request_id)) payments.set(q.request_id, new Submission());
@@ -97,13 +98,16 @@ export function requestsPage(main, me) {
           error.show(errorMessage(r, 'That action was refused.'));
         }
       } catch (e) {
+        uncertain = true;
         if (attempt) payments.get(q.request_id).settle('uncertain');
         error.show(action === 'pay'
           ? 'We couldn’t confirm this payment. Press “Pay” again to retry safely; you will never be charged twice.'
           : 'We couldn’t confirm that action. Refresh the list to see the latest state.');
       }
     });
-    await load();
+    // An unknown outcome is not a confirmed result: keep the item (and its Pay
+    // button) as it was so the payer can retry with the same key and body.
+    if (!uncertain) await load();
   }
 
   main.replaceChildren(pageHeader('Requests', 'Money you’ve been asked for, and money you’ve asked for.'),
