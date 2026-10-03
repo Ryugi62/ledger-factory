@@ -29,3 +29,24 @@
 - Reviewer's final check on 88070ae: unit tests 21/21; analyst probes 132 passed / 0 failed / 2 skipped (browser; run on host: stage-3 UI 2/2, stage-2 UI 19/19) with --peer, --stage1-url, --stage2-url; shipped checks isolated: stage 1 147/147, stage 2 35/35, stage 3 6/6, claimed stage: 3 (next-stage line fails as expected); clean build/run at 2 vCPU / 2 GiB; stage-1/ and stage-2/ unchanged; reviewer's 3000-payment / 2000 statement reads / 50 in flight scenario: 70 MiB, no crash
 - Review notes and decisions: (1) statement snapshots stored fully materialised and kept forever — heap exhaustion crash under load; fixed in 88070ae (compact snapshots recomputed on demand, heap limit 1536 MB), also forwarded to the analyst as a stage-4 ledger row and probe (S4-071). Stage-2 notes (Pay visibility, hold headlines) were already fixed in stage 2 and carried as stage-3 rows/probes
 - Accepted commit: 88070ae781bba8153539138f315f8f72de822952
+
+## Stage 4 — refunds and batch corrections — ACCEPTED
+
+- Start / end (UTC): 2026-10-03 12:34 / 12:49
+- Review rounds: 1 (r1 accept at b39bad5)
+- Rejections: none
+- Ledger: 62 rows at 114cbaf (54 ★, includes review-note S4-071 for bounded memory); every row has a probe except 4 with a manual component (earlier-suite re-run, imports of stage-1/2/3 exports that need the earlier services — all exercised by the reviewer with the accepted images). Known gaps: 0
+- Reviewer's final check on b39bad5: unit tests 24/24; analyst probes 148 passed / 0 failed / 0 skipped (--peer, --stage1/2/3-url; memory probe 40 MiB); UI probes from the host: stage 3 2/2, stage 2 19/19; shipped checks isolated: stage 1 147/147, stage 2 35/35, stage 3 6/6, stage 4 5/5, claimed stage: 4; clean build/run at 2 vCPU / 2 GiB; 3000-payment / 2000 statement reads scenario at 77 MiB; stage-1/2/3 folders unchanged since their accepted commits
+- Review notes: none
+- Accepted commit: b39bad590d1057330ef053ad7b38ac7e6f76d0b9
+
+## Run summary
+
+| Stage | Accepted commit | Rejections | Review rounds | Ledger rows (★) |
+|---|---|---|---|---|
+| 1 | d1be8d8 | 0 | 1 (+1 confirmation of fix) | 192 (94) |
+| 2 | 4d44098 | 0 | 1 (+1 confirmation of fix) | 199 (107) |
+| 3 | 88070ae | 0 | 1 (+1 confirmation of fix) | 106 (89) |
+| 4 | b39bad5 | 0 | 1 | 62 (54) |
+
+Run window (UTC): 2026-10-03 10:10 – 12:49.
