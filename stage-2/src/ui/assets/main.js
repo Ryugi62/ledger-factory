@@ -15,15 +15,15 @@ const SIGNED_OUT = { '/login': loginPage, '/signup': signupPage };
 async function start() {
   const path = location.pathname;
   if (SIGNED_OUT[path]) {
+    // Login and signup stay reachable by URL; a signed-in visitor keeps the signed-in header.
+    let me = null;
     if (session.token) {
-      // Already signed in with a working token: go to the wallet.
       try {
         const r = await api('GET', '/me');
-        if (r.ok) { location.replace('/'); return; }
-        session.clear();
+        if (r.ok) me = r.data; else if (r.status === 401) session.clear();
       } catch (e) { /* offline: show the form */ }
     }
-    SIGNED_OUT[path](signedOutFrame());
+    SIGNED_OUT[path](me ? signedInFrame(me, path) : signedOutFrame());
     return;
   }
   const page = SIGNED_IN[path];

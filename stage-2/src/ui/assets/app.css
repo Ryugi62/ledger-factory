@@ -167,7 +167,7 @@ select.input { appearance: auto; }
 .share-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ---- auth */
-.auth { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+.auth { display: flex; flex-direction: column; gap: 1rem; margin: 1rem auto 0; max-width: 480px; }
 .auth-intro h1 { font-size: 1.6rem; }
 .switch { text-align: center; }
 

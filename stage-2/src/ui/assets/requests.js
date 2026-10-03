@@ -35,12 +35,10 @@ export function requestsPage(main, me) {
   function render(list) {
     const incoming = list.filter((q) => q.payer_id === me.user_id);
     const outgoing = list.filter((q) => q.requester_id === me.user_id);
-    if (!incoming.length && !outgoing.length) {
-      body.replaceChildren(empty('empty-requests', 'No requests yet',
-        'When someone asks you for money, or you ask someone, it shows up here. Request money from the Wallet screen.'));
-      return;
-    }
-    body.replaceChildren(h('div', { class: 'grid' },
+    const none = !incoming.length && !outgoing.length;
+    body.replaceChildren(none ? empty('empty-requests', 'No requests yet',
+      'When someone asks you for money, or you ask someone, it shows up here. Request money from the Wallet screen.') : null,
+    h('div', { class: 'grid' },
       h('div', { class: 'col' }, card('Asked of you',
         h('ul', { class: 'list', testid: 'incoming-list' },
           incoming.length ? incoming.map((q) => item(q, true)) : h('li', { class: 'list-empty muted' }, 'Nobody has asked you for money.')))),
