@@ -85,7 +85,7 @@ function validateFixture(fx) {
 async function buildFromFixture(fx) {
   const { users, payments, requests, operators } = validateFixture(fx);
   const hashes = new Map();
-  for (const u of users) if (!hashes.has(u.password)) hashes.set(u.password, hashPassword(u.password));
+  for (const u of users) if (!hashes.has(u.password)) hashes.set(u.password, hashPassword(u.password, { seed: true }));
   const resolved = new Map();
   await Promise.all([...hashes].map(async ([pw, pending]) => resolved.set(pw, await pending)));
 

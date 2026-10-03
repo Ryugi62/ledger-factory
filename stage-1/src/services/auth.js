@@ -26,13 +26,16 @@ function issueToken(state, userId) {
   return token;
 }
 
-// getState() returns the live state; hashing is async, so uniqueness is
-// checked again (synchronously) right before the account is inserted.
+// Hashing is async, so a signup is bound to the state that was live when it
+// arrived: uniqueness is checked again (synchronously) against that same state
+// right before the account is inserted. If a reset or import replaced the
+// state meanwhile, the account lands in the discarded state, i.e. the signup
+// is ordered before the replacement and never leaks into the new one.
 async function signup(getState, body) {
   const fields = signupFields(body);
-  checkFree(getState(), fields);
-  const passwordHash = await hashPassword(fields.password);
   const state = getState();
+  checkFree(state, fields);
+  const passwordHash = await hashPassword(fields.password);
   checkFree(state, fields);
   const id = store.newId(state, 'u_', state.users);
   store.addUser(state, {

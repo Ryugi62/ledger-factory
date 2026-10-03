@@ -28,16 +28,28 @@ function createRoutes() {
 
   const ok = (body) => ({ status: 200, body });
 
+  // Reset and import replace the whole state. They run one at a time in
+  // arrival order, so a reset still hashing passwords cannot be overtaken by a
+  // later reset or import. A failed replacement leaves the state unchanged.
+  let replacing = Promise.resolve();
+  const replaceState = (build) => {
+    const run = replacing.then(async () => { state = await build(); });
+    replacing = run.catch(() => {});
+    return run;
+  };
+
   return [
     { method: 'GET', pattern: /^\/health$/, handler: () => ok({ status: 'ok' }) },
 
     { method: 'POST', pattern: /^\/_test\/reset$/, handler: async (ctx) => {
-      state = await buildFromFixture(ctx.json());
+      const fixture = ctx.json();
+      await replaceState(() => buildFromFixture(fixture));
       return { status: 204 };
     } },
     { method: 'GET', pattern: /^\/_test\/export$/, handler: () => ok(exportState(state)) },
-    { method: 'POST', pattern: /^\/_test\/import$/, handler: (ctx) => {
-      state = importState(ctx.json());
+    { method: 'POST', pattern: /^\/_test\/import$/, handler: async (ctx) => {
+      const envelope = ctx.json();
+      await replaceState(() => importState(envelope));
       return { status: 204 };
     } },
 
