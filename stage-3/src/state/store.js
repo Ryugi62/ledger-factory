@@ -45,9 +45,11 @@ function createState({ currency, minorUnits, ttlSeconds = DEFAULT_TTL_SECONDS })
     splits: new Map(),     // id -> split
     settlements: new Map(),// id -> settlement
     idempotency: new Map(),// scope key -> { bodyCanon, status, response }
-    snapshots: new Map(),  // statement snapshot token -> { userId, opening, closing, entries }
+    snapshots: new Map(),  // statement snapshot token -> { userId, fromUs, toUs, knownUs, cut } (compact)
+    snapshotCache: new Map(), // a few recently materialized snapshot results (bounded)
     counter: 0,            // id sequence
     seq: 0,                // creation order for listings
+    revSeq: 0,             // global order of payment revisions (snapshot cut-offs)
   };
 }
 
@@ -87,6 +89,7 @@ function addPayment(state, p) {
   if (p.seq === undefined) p.seq = ++state.seq;
   if (p.createdUs === undefined) p.createdUs = parseInstant(p.createdAt);
   if (!p.revisions) p.revisions = [originalRevision(p)];
+  for (const r of p.revisions) if (r.rseq === undefined) r.rseq = ++state.revSeq;
   state.payments.set(p.id, p);
   state.users.get(p.from).paymentIds.push(p.id);
   state.users.get(p.to).paymentIds.push(p.id);

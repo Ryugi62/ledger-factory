@@ -60,6 +60,7 @@ function createCorrection(state, caller, paymentId, body) {
   if (!historyIsSolvent(state, from, override) || !historyIsSolvent(state, to, override)) {
     throw conflict('historical_overdraft', 'this correction would make a balance negative in the past');
   }
+  revision.rseq = ++state.revSeq;
   p.revisions.push(revision);
   from.balance -= diff;
   to.balance += diff;

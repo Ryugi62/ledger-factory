@@ -12,4 +12,4 @@ COPY test ./test
 
 USER node
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+CMD ["node", "--max-old-space-size=1536", "src/server.js"]

@@ -7,20 +7,23 @@
 
 const store = require('../state/store');
 
-// The revision of `p` selected by known_at (µs, or null for "everything known").
-function selectRevision(p, knownUs) {
+// The revision of `p` selected by known_at (µs, or null for "everything known")
+// among the revisions that existed at cut-off `cut` (global revision sequence;
+// Infinity = now). A snapshot replays a read exactly through its cut-off.
+function selectRevision(p, knownUs, cut = Infinity) {
   const revs = p.revisions;
-  if (knownUs === null) return revs[revs.length - 1];
-  for (let i = revs.length - 1; i >= 0; i--) if (revs[i].recUs <= knownUs) return revs[i];
+  for (let i = revs.length - 1; i >= 0; i--) {
+    if (revs[i].rseq <= cut && (knownUs === null || revs[i].recUs <= knownUs)) return revs[i];
+  }
   return null;
 }
 
 // The user's selected contributions: [{ p, rev, delta, effUs }].
-function contributions(state, user, knownUs, override) {
+function contributions(state, user, knownUs, override, cut = Infinity) {
   const out = [];
   for (const id of user.paymentIds) {
     const p = state.payments.get(id);
-    const rev = override && override.paymentId === id ? override.revision : selectRevision(p, knownUs);
+    const rev = override && override.paymentId === id ? override.revision : selectRevision(p, knownUs, cut);
     if (!rev) continue;
     out.push({ p, rev, delta: p.from === user.id ? -rev.amount : rev.amount, effUs: rev.effUs });
   }
@@ -94,8 +97,8 @@ function historyIsSolvent(state, user, override) {
 
 // The full statement for [from, to) in a view: entries oldest first by
 // selected effective time, then payment id; balances describe the full window.
-function statement(state, user, { fromUs, toUs, knownUs }) {
-  const all = contributions(state, user, knownUs);
+function statement(state, user, { fromUs, toUs, knownUs, cut = Infinity }) {
+  const all = contributions(state, user, knownUs, null, cut);
   let opening = user.opening;
   const inWindow = [];
   for (const c of all) {

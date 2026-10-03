@@ -34,11 +34,27 @@ function meView(state, user, params, startedUs) {
   return view;
 }
 
-function pageOf(snap, token, paging) {
-  const { items, hasMore } = rules.page(snap.entries, paging);
+function pageOf(result, token, paging) {
+  const { items, hasMore } = rules.page(result.entries, paging);
   return {
-    opening_balance: snap.opening, entries: items, closing_balance: snap.closing, has_more: hasMore, snapshot: token,
+    opening_balance: result.opening, entries: items, closing_balance: result.closing, has_more: hasMore, snapshot: token,
   };
+}
+
+// Snapshots are stored compactly: the window, known_at and the global revision
+// cut-off of the first read. Revisions are append-only and payment parties,
+// notes and visibility never change, so recomputing under the cut-off yields
+// exactly the frozen result. A few recent results are cached for paging.
+const CACHE_SIZE = 16;
+
+function resultOf(state, user, token, snap) {
+  const cache = state.snapshotCache; // token -> result; replaced with the state on reset/import
+  const hit = cache.get(token);
+  if (hit) return hit;
+  const result = statement(state, user, snap);
+  cache.set(token, result);
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value);
+  return result;
 }
 
 // GET /statement: a fresh read freezes its full result under a snapshot token;
@@ -52,19 +68,19 @@ function statementView(state, user, params, startedUs) {
     const token = params.get('snapshot');
     const snap = state.snapshots.get(token);
     if (!snap || snap.userId !== user.id) throw notFound('no such snapshot');
-    return pageOf(snap, token, paging);
+    return pageOf(resultOf(state, user, token, snap), token, paging);
   }
   const from = instantParam(params, 'from');
   const to = instantParam(params, 'to');
   const knownAt = instantParam(params, 'known_at');
   // `to` defaults to now: everything effective up to the start of this read.
-  const result = statement(state, user, {
-    fromUs: from ? from.us : null, toUs: to ? to.us : startedUs + 1, knownUs: knownAt ? knownAt.us : null,
-  });
+  const snap = {
+    userId: user.id, fromUs: from ? from.us : null, toUs: to ? to.us : startedUs + 1,
+    knownUs: knownAt ? knownAt.us : null, cut: state.revSeq,
+  };
   const token = 'st_' + crypto.randomBytes(18).toString('base64url');
-  const snap = { userId: user.id, opening: result.opening, closing: result.closing, entries: result.entries };
   state.snapshots.set(token, snap);
-  return pageOf(snap, token, paging);
+  return pageOf(resultOf(state, user, token, snap), token, paging);
 }
 
 module.exports = { meView, statementView, instantParam, nowUs };

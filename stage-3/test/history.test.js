@@ -75,6 +75,10 @@ test('statement: half-open window, balances, ordering and frozen snapshot', asyn
     const win = (await call('GET', '/statement' + q({ from: iso(base - 10 * H), to: iso(base - 5 * H) }), { token: ada })).body;
     assert.deepStrictEqual([win.opening_balance, win.closing_balance, win.entries.length], [1000, 700, 1]);
     await call('POST', '/payments', { token: ada, body: { to_handle: 'bob', amount: 5 } });
+    await call('POST', '/payments/p_1/corrections', { token: ada,
+      body: { expected_revision: 1, amount: 310, effective_at: iso(base - 10 * H), reason: 'later fix' } });
+    const again = (await call('GET', '/statement' + q({ snapshot: st.snapshot, limit: 1 }), { token: ada })).body;
+    assert.deepStrictEqual([again.entries[0].payment.amount, again.entries[0].revision, again.closing_balance], [300, 1, 800]);
     const frozen = (await call('GET', '/statement' + q({ snapshot: st.snapshot, limit: 1, offset: 1 }), { token: ada })).body;
     assert.deepStrictEqual([frozen.closing_balance, frozen.entries.length, frozen.has_more], [800, 1, false]);
     assert.strictEqual((await call('GET', '/statement' + q({ snapshot: st.snapshot, from: iso(base) }), { token: ada })).status, 422);
