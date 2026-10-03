@@ -73,6 +73,7 @@ earlier probes that stage 4 deliberately supersedes (`SUPERSEDED` in `run_all.py
 10. **Wrong JSON types** in a batch or refund body: 400 `malformed_request` or 422; amounts that are strings, booleans,
     fractions or out of range are 422 (stage-1 §5).
 11. **Timestamp resolution / sleeps**: as in stage 3 (events that must be ordered are ≥1.1 s apart; instants probed at ±0.4 s).
+12. **Memory probe** (S4-071): black-box, so it asserts what a crash or leak would break — every one of 2000 reads answers 200 within ~90 s, balances/state unchanged, a snapshot taken before the flood and snapshots taken during it still page the same frozen entries (also after a further write). The 2 GiB limit itself is applied by the reviewer (`docker run --memory 2g`); the probe size can be reduced with `PF_MEM_PAYMENTS` / `PF_MEM_CALLS` for smoke tests.
 
 ## Ledger
 
@@ -136,14 +137,15 @@ earlier probes that stage 4 deliberately supersedes (`SUPERSEDED` in `run_all.py
 | S4-068 | §migration | ★ (state kind: authorizations, holds, captures, opening balances, earlier kinds) every earlier state kind still survives export/import; the stage-1/2/3 round-trip probes are re-run by this runner. | data-migration | `s4_03_races_export.round_trip_keeps_refunds_batches_membership_snapshots_and_replays`; plus manual — re-run of the earlier stages' probe suites by this runner (see the table of changed earlier rows) |
 | S4-069 | §migration | ★ (derived) imported stage-1/2/3 payments are refundable by their receiver, imported captures are refundable but immutable, imported opening balances and revisions keep `as_of`/statement views consistent. | data-migration | `s4_03_races_export.a_stage1_export_is_accepted_with_membership_and_refundable_payments`, `s4_03_races_export.a_stage2_export_is_accepted_and_captures_stay_refundable_but_immutable`, `s4_03_races_export.a_stage3_export_is_accepted_with_corrections_membership_and_snapshots` |
 | S4-070 | §review | Review notes forwarded for stage 4: none yet. | review-note | manual — none forwarded |
+| S4-071 | stage-3 review | ★ (review note) memory must stay bounded under repeated reads: a wallet with ~3000 payments, 2000 `GET /statement?limit=10` calls at 50 in flight in a 2 GiB container must not crash or exhaust memory (every statement snapshot being stored fully materialised and kept forever made the stage-3 build die with a JS heap OOM at about 1 GB). The service must keep answering, snapshots must stay frozen and valid, state must not be lost; the probe stays under ~60–90 s. | review-note | `s4_04_memory.two_thousand_statement_reads_at_50_in_flight_keep_the_service_alive_and_snapshots_valid` |
 | S4-090 | §earlier | ★ (earlier invariant, re-checked) the sum of balances equals the seeded total and no `total`/`available` is ever negative at any read or past boundary, through refunds, corrections and batches. | concurrency | `s4_02_batches.batch_authorization_shape_shared_recorded_at_originals_and_replay` |
 | S4-102 | §derived | ★ (derived, with S4-048) a saved statement taken before a batch pages the same entries afterwards for both parties; `known_at` just before the batch's `recorded_at` still reproduces the old statement. | behaviour | `s4_02_batches.snapshots_stay_frozen_after_a_batch_and_new_statements_show_it` |
 | S4-110 | §derived | ★ (derived, with S4-017/S4-018) a refund never changes the target request's `paid` state, the authorization's status/captured amount/hold, or the settlement member's receipt. | behaviour | `s4_01_refunds.refunds_of_request_capture_and_settlement_payments_change_no_links_and_use_available_funds` |
 
 ## Summary
 
-Row counts by kind: behaviour 21, error 17, data-migration 11, concurrency 6, idempotency 5, review-note 1 (61 rows).
-★ rows: 53. Rows with a `manual` component: 4 (the three earlier-stage export imports that need the earlier services, the
+Row counts by kind: behaviour 21, error 17, data-migration 11, concurrency 6, idempotency 5, review-note 2 (62 rows).
+★ rows: 54. Rows with a `manual` component: 4 (the three earlier-stage export imports that need the earlier services, the
 earlier-suite re-run, and the not-yet-forwarded review notes).
 
 Data-migration rows by state kind: refunds (S4-060), correction batches (S4-061), revisions (S4-062), recorded/effective

@@ -7,7 +7,7 @@ sys.path.insert(0, HERE)
 os.environ.setdefault("BASE_URL", "http://127.0.0.1:1")
 import kit4  # noqa: E402
 import lib  # noqa: E402
-MODS = ["s4_01_refunds", "s4_02_batches", "s4_03_races_export"]
+MODS = ["s4_01_refunds", "s4_02_batches", "s4_03_races_export", "s4_04_memory"]
 for m in MODS:
     importlib.import_module(m)
 declared, names = {}, set()
