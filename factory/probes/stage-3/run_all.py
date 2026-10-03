@@ -23,7 +23,7 @@ S2 = os.path.abspath(os.path.join(HERE, "..", "stage-2"))
 S1 = os.path.abspath(os.path.join(HERE, "..", "stage-1"))
 sys.path[:0] = [HERE, S2, S1]
 
-S3_MODULES = ["s3_01_asof", "s3_02_statement", "s3_03_corrections", "s3_04_snapshots", "s3_05_holds_history", "s3_06_concurrency", "s3_07_export"]
+S3_MODULES = ["s3_01_asof", "s3_02_statement", "s3_03_corrections", "s3_04_snapshots", "s3_05_holds_history", "s3_06_concurrency", "s3_07_export", "s3_08_ui_review"]
 S2_API = ["s2_01_fixture_me", "s2_02_authorizations", "s2_03_idem_conc", "s2_04_export", "s2_08_review_notes"]
 S2_UI = ["s2_05_ui_core", "s2_06_ui_flows", "s2_07_ui_auth_quality"]
 S1_MODULES = ["p01_runtime", "p02_auth", "p03_payments", "p04_requests", "p05_splits_money", "p06_feed",

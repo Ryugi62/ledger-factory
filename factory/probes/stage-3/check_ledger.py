@@ -7,7 +7,7 @@ sys.path.insert(0, HERE)
 os.environ.setdefault("BASE_URL", "http://127.0.0.1:1")
 import kit3  # noqa: E402
 import lib  # noqa: E402
-MODS = ["s3_01_asof", "s3_02_statement", "s3_03_corrections", "s3_04_snapshots", "s3_05_holds_history", "s3_06_concurrency", "s3_07_export"]
+MODS = ["s3_01_asof", "s3_02_statement", "s3_03_corrections", "s3_04_snapshots", "s3_05_holds_history", "s3_06_concurrency", "s3_07_export", "s3_08_ui_review"]
 for m in MODS:
     importlib.import_module(m)
 declared, names = {}, set()

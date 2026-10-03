@@ -175,11 +175,13 @@ stage 3 extends (echo of `as_of` / `known_at`); the money fields stay checked by
 | S3-150 | §concurrency | ★ (derived) every read made while writers run is internally consistent: a statement's opening + deltas = closing with a correct `balance_after` chain, a snapshot taken during writes is consistent and never changes afterwards, no balance is negative. | concurrency | `s3_06_concurrency.snapshots_and_reads_stay_consistent_while_writers_run`, `s3_06_concurrency.mixed_corrections_payments_and_reads_keep_every_invariant` |
 | S3-151 | §review | Review notes carried from earlier stages (S2-233…S2-236: 1000-user reset within 10 s, signup-vs-reset, overlapping resets) keep applying: the stage-2 `s2_08_review_notes` probes are re-run by this runner. | review-note | manual — re-run of the stage-1 and stage-2 probe suites by this runner (see the table of changed earlier rows) |
 | S3-152 | §review | Review notes forwarded for stage 3: none yet. | review-note | manual — none forwarded |
+| S3-153 | stage-2 review | ★ (review note 1) On `/requests` the Pay button must let the payer choose public/private visibility (stage 1: "The payer chooses it when the money moves"). Probe: pay an incoming request choosing private (the screen offers a `<select>` or radio pair with the values `public`/`private`, found inside the request item or on the page), check the payment's `visibility`, that a third party does not see it in `/activity`, and that a retry after a lost response keeps the same Idempotency-Key and body and moves money once. | review-note | `s3_08_ui_review.paying_a_request_lets_the_payer_choose_visibility_and_retries_keep_key_and_body` |
+| S3-154 | stage-2 review | (review note 2) On `/authorizations` the headline of a voided or expired outgoing hold must reflect its status (not "You're holding money for @bob"). Probe: closed holds (voided / expired / captured) must name their status and must not read "you hold / holding money"; look and wording of the headline are also a manual check on the screenshot. | review-note | `s3_08_ui_review.a_voided_or_expired_outgoing_hold_does_not_claim_to_be_holding_money`; plus manual — wording and look of the headline (screenshot `authorizations-closed-headlines.png` in $PF_SHOTS) |
 
 ## Summary
 
-Row counts by kind: behaviour 57, error 21, data-migration 12, concurrency 5, idempotency 4, time 3, review-note 2
-(104 rows). ★ rows: 88. Rows with a `manual` component: 7 (re-run of earlier suites, stage-1/stage-2 export needing the
+Row counts by kind: behaviour 57, error 21, data-migration 12, concurrency 5, idempotency 4, time 3, review-note 4
+(106 rows). ★ rows: 89. Rows with a `manual` component: 8 (re-run of earlier suites, stage-1/stage-2 export needing the
 earlier services, reading-only rows).
 
 Data-migration rows by state kind: revisions (S3-140), effective/recorded times (S3-141), opening balances (S3-142), hold
