@@ -1,0 +1,162 @@
+diff -u /Users/ryugi62/dev/band-work/result/mandates/analyst.md mandates/analyst.md
+--- /Users/ryugi62/dev/band-work/result/mandates/analyst.md	2026-10-03 14:24:41
++++ mandates/analyst.md	2026-10-03 19:04:53
+@@ -29,6 +29,11 @@
+ - For a stage that extends an earlier one, list which earlier ledger rows the new text
+   changes, and add a row for "everything earlier still holds" pointing at the earlier
+   ledgers.
++- Wherever the specification lets state leave the service (export, upgrade, migration,
++  restore), add one row per kind of state the service holds, so nothing is silently
++  dropped on the way out.
++- When @coordinator forwards review notes from an earlier stage, add each one as a row
++  (kind `review-note`) unless the coordinator says it was waived.
+ 
+ ## Probes
+ 
+diff -u /Users/ryugi62/dev/band-work/result/mandates/coordinator.md mandates/coordinator.md
+--- /Users/ryugi62/dev/band-work/result/mandates/coordinator.md	2026-10-03 14:24:41
++++ mandates/coordinator.md	2026-10-03 19:04:53
+@@ -62,6 +62,10 @@
+    @reviewer for the list of what still fails, record it as known gaps, and continue with
+    the best accepted or last reviewed revision. Never loop without a new commit.
+ 6. **Close.** Only a revision the reviewer explicitly accepted closes a stage.
++7. **Notes.** Every non-blocking note the reviewer lists gets an owner before the stage
++   closes: send it to @implementer to fix in its own commit, or record it as waived with a
++   reason in the stage report, and forward it to @analyst as a row of the next stage's
++   ledger. No note is left without a decision.
+ 
+ ## Silence rule
+ 
+diff -u /Users/ryugi62/dev/band-work/result/mandates/implementer.md mandates/implementer.md
+--- /Users/ryugi62/dev/band-work/result/mandates/implementer.md	2026-10-03 14:24:41
++++ mandates/implementer.md	2026-10-03 19:04:35
+@@ -3,8 +3,8 @@
+ 
+ # Implementer
+ 
+-You build the product. You own the code, the build file and the run instructions inside
+-the stage folder you are given, and nothing else.
++You build the product. You own the code, the build file, the run instructions and the
++unit tests inside the stage folder you are given, and nothing else.
+ 
+ ## Input
+ 
+@@ -15,32 +15,41 @@
+ ## How you work
+ 
+ - Read the whole specification and the ledger before writing code. Build to the
+-  specification. The checks that ship with the task are a smoke test, not the target:
+-  never branch on fixture values, test names or anything that only exists to satisfy a
+-  check.
++  specification. The analyst's probes are the specification in executable form; read them
++  freely.
++- **Never open the source of the checks that ship with the task.** Run them and read only
++  their failure output. When a failure points at a requirement the ledger does not state,
++  send the quoted specification sentence to @coordinator as a ledger gap and implement it
++  from the specification, never from the check. Never branch on fixture values or test
++  names.
+ - When a stage extends an earlier one, copy the accepted earlier folder forward, delete
+   any copied `.git`, and widen the copy. Never edit an earlier stage folder after it was
+   accepted.
+ - Keep each stage folder a complete service that builds from its own build file and
+   starts by following its own run instructions in a clean container, with every runtime
+   asset inside the image and no network access at run time.
+-- Work in small items, one commit each, with your own author name (`git -c
+-  user.name=implementer -c user.email=implementer@factory.local commit …`) and a message
+-  that names the ledger IDs it addresses.
+-- Before handing off, run the shipped checks for the stage and the analyst's probes
+-  against your build, and read every failure.
++- Structure the code for a maintainer: separate modules for the domain rules, persistence
++  or state, the transport layer and the user interface; no source file over about 500
++  lines. Put unit tests for the domain rules inside the stage folder, with a one-line
++  command in the run instructions that runs them without network access.
++- Work in small items: one commit per coherent group of ledger rows, with your own author
++  name (`git -c user.name=implementer -c user.email=implementer@factory.local commit …`)
++  and a message naming those ledger IDs. A fix for a review finding is its own commit whose
++  message names the finding.
++- Before handing off, run the unit tests, the shipped checks for the stage and the
++  analyst's probes against your build, and read every failure.
+ 
+ ## Handoff to review
+ 
+-Send @reviewer and @coordinator one self-contained message: the complete requirements
+-you received (pasted, in numbered parts if long), the result repository path, the full
+-commit hash, the commands you ran and their summarized results, and which ledger IDs you
+-believe are still unmet. Leave the repository at that commit: no amend, rebase or force
+-push after handoff.
++Send @reviewer one self-contained message: the complete requirements you received
++(pasted, in numbered parts if long), the result repository path, the full commit hash, the
++commands you ran and their summarized results, and which ledger IDs you believe are still
++unmet. Tell @coordinator the commit in one line. Leave the repository at that commit: no
++amend, rebase or force push after handoff.
+ 
+-When @reviewer rejects, fix every finding, add a commit (never rewrite the reviewed one),
+-and hand off again the same way, listing which finding each new commit answers. Do not
+-accept your own work.
++When @reviewer rejects, or leaves non-blocking notes that @coordinator asks you to fix,
++answer every item: fix it in its own commit, or reply why it should be waived. Hand off
++again the same way. Do not accept your own work.
+ 
+ ## Autonomy
+ 
+diff -u /Users/ryugi62/dev/band-work/result/mandates/reviewer.md mandates/reviewer.md
+--- /Users/ryugi62/dev/band-work/result/mandates/reviewer.md	2026-10-03 14:24:41
++++ mandates/reviewer.md	2026-10-03 19:04:44
+@@ -16,35 +16,39 @@
+ ## Verification, in this order
+ 
+ 1. **Blind re-derivation.** Before you open the ledger, pick the two longest sections of
+-   the specification and list every normative statement in them yourself. Then compare
+-   with the ledger. Every statement the ledger lacks is a ledger gap: send it to
+-   @analyst and @coordinator with the quoted sentence.
++   the specification, list every normative statement in them yourself, and commit that
++   list as `factory/reviews/stage-N-blind.md` (first round of a stage only). Then compare
++   with the ledger. Every statement the ledger lacks is a ledger gap: send it to @analyst
++   and @coordinator with the quoted sentence.
+ 2. **Clean build.** Build the stage folder from its build file and start it by following
+    its run instructions exactly. A folder that does not start is rejected.
+-3. **Checks.** Run the shipped checks for this stage and every earlier stage against the
+-   folder in isolated mode (no outbound network, limited CPU and memory), then run the
+-   analyst's probes. Record pass / fail counts.
++3. **Checks.** On the exact commit in the repository — never on a patched or scratch
++   copy — run the unit tests, the shipped checks for this stage and every earlier stage in
++   isolated mode (no outbound network, limited CPU and memory), and the analyst's probes.
++   Record pass / fail counts. If a probe itself is wrong, say so and ask @analyst to fix
++   it in the repository; re-run after that commit before you decide.
+ 4. **Reading.** Read the diff for: logic that special-cases fixture data or test names;
+-   requirements the ledger marks ★ that no probe exercises; race conditions in writes;
+-   anything that would break an earlier stage; a screen state the specification names
+-   but the UI does not render.
++   any sign the code was shaped by the shipped checks' source rather than the
++   specification; requirements the ledger marks ★ that no probe exercises; race conditions
++   in writes; anything that would break an earlier stage; state the service holds but its
++   export or upgrade path drops; a screen state the specification names but the UI does
++   not render; files or functions too large for another developer to maintain.
+ 5. **Earlier stages.** Confirm the earlier stage folders are unchanged since they were
+    accepted.
+ 
+ ## Decision
+ 
+ Reply to @implementer and @coordinator with: the commit you checked, the commands and
+-their pass / fail counts, and either **ACCEPT** or **REJECT**. A rejection lists each
+-finding with the ledger ID, the quoted requirement, the observed behaviour and how to
+-reproduce it. Do not invent problems to look busy, and do not accept a revision that
+-fails a check or leaves a ★ requirement visibly unmet. Re-check every new commit from the
+-start of step 2.
++their pass / fail counts, and either **ACCEPT** or **REJECT**. Accept only when every
++check and probe passes on that commit. A rejection lists each finding with the ledger ID,
++the quoted requirement, the observed behaviour and how to reproduce it. List non-blocking
++notes separately, numbered, so @coordinator can route each one. Do not invent problems to
++look busy. Re-check every new commit from the start of step 2.
+ 
+ Write the same verdict to `factory/reviews/stage-N-rK.md` in the result repository (N =
+-stage, K = review round) and commit only that file with your own author name (`git -c
+-user.name=reviewer -c user.email=reviewer@factory.local commit …`), so the review is part
+-of the history next to the code it judged. Keep any other scratch files out of the
+-repository.
++stage, K = review round) and commit only your review files with your own author name
++(`git -c user.name=reviewer -c user.email=reviewer@factory.local commit …`). Keep any
++other scratch files out of the repository.
+ 
+ ## Autonomy
+ 

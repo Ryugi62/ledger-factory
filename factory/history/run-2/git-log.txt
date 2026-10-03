@@ -1,0 +1,37 @@
+e2b3088 Ryugi62 (human) 2026-10-03 19:11:06 +0900 genericity README: note which harness the toy run actually used
+1602ff8 Ryugi62 (human) 2026-10-03 18:55:43 +0900 Post-run evidence: reviewer's blind lists and scripts, toy-track rehearsal room and mandate diff; FACTORY.md concessions and expected hidden-test misses
+f3b9391 Ryugi62 (human) 2026-10-03 18:50:19 +0900 FACTORY.md: time per seat and stage, review-changed table, test-read audit, code map, known gaps
+4a2b061 Ryugi62 (human) 2026-10-03 18:29:01 +0900 README, FACTORY.md, room.json (downloaded unchanged), setup scripts — human-written after the run
+d4df7d1 coordinator 2026-10-03 18:24:27 +0900 coordinator: run log, stage 4 report and run summary
+012d229 reviewer 2026-10-03 18:24:03 +0900 review: stage 4 round 1 ACCEPT (777b76d), S4-045 stage-3 snapshot gap recorded
+1837adf analyst 2026-10-03 18:13:41 +0900 analyst: upgrade probes ignore null refund_of / correction_batch_id added by later stages
+777b76d implementer 2026-10-03 18:04:34 +0900 stage-4: RUN.md with upgrade notes and the stage-3 snapshot gap (S1-010, S4-045)
+3a3b3e3 implementer 2026-10-03 18:04:34 +0900 stage-4: refunds, correction batches and exported snapshots (S4-002..S4-052)
+81cfc9e analyst 2026-10-03 17:54:20 +0900 analyst: stage 4 S4-045 stage-3 snapshot tokens recorded as a known gap (coordinator decision)
+531f619 implementer 2026-10-03 17:53:28 +0900 stage-4: copy accepted stage-3 service forward (S4 carry-forward)
+a961f7a coordinator 2026-10-03 17:53:22 +0900 coordinator: run log, stage 3 report
+fe817bb reviewer 2026-10-03 17:52:49 +0900 review: stage 3 round 1 ACCEPT (cc562c1)
+f765fae analyst 2026-10-03 17:37:02 +0900 analyst: stage 4 requirement ledger (52 rows) and black-box probes (refunds, correction batches, races, upgrades)
+762740c analyst 2026-10-03 17:37:02 +0900 analyst: stage 3 probes no longer assume feed order inside one second (S1-158)
+cc562c1 implementer 2026-10-03 17:34:44 +0900 stage-3: RUN.md (S1-010)
+d9259f3 implementer 2026-10-03 17:34:44 +0900 stage-3: bitemporal ledger, statements, corrections and historical holds (S3-003..S3-120)
+6246927 implementer 2026-10-03 17:23:04 +0900 stage-3: copy accepted stage-2 service forward (S3 carry-forward)
+898c447 analyst 2026-10-03 17:22:51 +0900 analyst: stage 3 requirement ledger (120 rows) and black-box probes (statements, as_of/known_at, corrections, snapshots, holds history)
+95662af coordinator 2026-10-03 17:14:35 +0900 coordinator: run log, stage 2 report
+1c8ec08 reviewer 2026-10-03 17:14:02 +0900 review: stage 2 round 2 ACCEPT (2dcc6ae)
+2dcc6ae implementer 2026-10-03 17:06:14 +0900 stage-2: never render null children as text (review F1: S2-015, S2-020)
+1940007 analyst 2026-10-03 17:03:48 +0900 analyst: stage 2 probe for leaked null/undefined/NaN text on data-rich routes (S2-015, S2-017, S2-020, S2-023)
+8189674 reviewer 2026-10-03 17:01:11 +0900 review: stage 2 round 1 REJECT (4beb1c4)
+4beb1c4 implementer 2026-10-03 16:46:45 +0900 stage-2: /login and /signup stay directly navigable when signed in (S2-008, S2-009, S2-029)
+902c73c implementer 2026-10-03 16:41:43 +0900 stage-2: RUN.md for the UI (S2-005, S1-010)
+d4c51d3 implementer 2026-10-03 16:41:43 +0900 stage-2: authorizations, holds and HTML/JSON negotiation (S2-012, S2-086..S2-153, S2-169..S2-173)
+118244a implementer 2026-10-03 16:41:43 +0900 stage-2: browser UI for wallet, requests, split and holds (S2-004..S2-085, S2-154..S2-170)
+ae45264 implementer 2026-10-03 16:18:45 +0900 stage-2: copy accepted stage-1 service forward (S2-001, S2-003)
+169cac5 analyst 2026-10-03 16:18:28 +0900 analyst: probes find the product in stage-N/ (Dockerfile, RUN.md); docker harness builds that context
+418d858 analyst 2026-10-03 16:16:50 +0900 analyst: stage 2 requirement ledger and probes (API + browser)
+87d14b8 coordinator 2026-10-03 15:48:21 +0900 coordinator: run log, stage 1 report
+1f09d3d reviewer 2026-10-03 15:47:53 +0900 review: stage 1 round 1 ACCEPT (247843d)
+247843d implementer 2026-10-03 15:42:51 +0900 stage-1: Dockerfile and RUN.md (S1-010, S1-011, S1-012, S1-013, S1-021, S1-022)
+93ae813 implementer 2026-10-03 15:42:51 +0900 stage-1: in-memory Pocketful HTTP service (S1-001..S1-207)
+9c0a17b analyst 2026-10-03 15:37:38 +0900 analyst: stage 1 requirement ledger and black-box probes
+83f1a9b Ryugi62 (human) 2026-10-03 14:24:41 +0900 Factory mandates and license (human-written; stage code is left to the band)
