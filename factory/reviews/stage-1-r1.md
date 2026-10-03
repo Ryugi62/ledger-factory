@@ -48,3 +48,7 @@ Stage 1 is the first stage; nothing to compare.
    can insert its account into the freshly reset state ("subsequent requests must see only that fixture").
    Balance 0, so money is unaffected. Same pattern: two overlapping resets finish in hashing order, not request order.
 3. Fixtures accept `minor_units` 0..8; the spec names 0, 2, 3. Harmless (no rejection is required).
+
+## Addendum
+
+The analyst tightened the probes in 07b53b2 (non-party on an existing request: exactly 403). `stage-1/` is unchanged from 3f766d4. Re-ran `run_all.py --peer` with the 07b53b2 probes against the same image: 69 passed, 0 failed, 0 skipped. `check_ledger.py`: agree. The verdict stays ACCEPT.
