@@ -45,10 +45,11 @@ single task message — the first message in `room.json`, the only human message
    while a stage is in review.
 2. **Probes from the spec, never from the shipped checks.** The analyst never opens them;
    the implementer may read the probes (the spec in executable form) but **must not open the
-   shipped checks' source** — only their failure output. In this run the room log shows no
-   tool call that opened a shipped test file. When a failing check pointed at something the
-   ledger did not state, the implementer reported it as a ledger gap and implemented it from
-   the spec (twice in stage 2, recorded in the run log).
+   shipped checks' source** — only their failure output. In this run no tool call opened a
+   shipped test file. But a pytest failure log prints the failing test's source in its
+   traceback, and once (11:21, stage 2) the implementer grepped 60 lines of it — so the
+   rule leaked through the log. Next mandate line: run the checks with `--tb=line` and read
+   only the `FAILED` lines (see "what failed").
 3. **A reviewer that does not trust the ledger or the implementer.** It commits its own
    blind list of the two longest sections before opening the ledger (`stage-N-blind.md`),
    then rebuilds on a clean clone, runs unit tests, isolated checks and probes **on the exact
@@ -59,7 +60,9 @@ single task message — the first message in `room.json`, the only human message
    analyst turns it into a row and probe of the next stage's ledger. Five notes were fixed
    this way; two were waived with reasons.
 5. **Code a maintainer can work in.** Modules for domain rules, state, services, transport
-   and UI; no file over ~250 lines; unit tests inside each stage folder, runnable offline
+   and UI (mandate limit ~500 lines per file; the largest file built is 241); unit tests
+   inside each stage folder — 24 by stage 4, thin next to the 148 probes, which are the real
+   regression suite — runnable offline
    (`docker run --rm --network none <image> node --test`).
 6. **Stop rule and silence rule.** At most four review rounds per stage; the coordinator
    waits on the git log after each handoff and resends after 45 min of silence (a lesson from
@@ -94,16 +97,22 @@ reviewer 12 (4 blind lists, 7 verdicts, 1 addendum), coordinator 4 reports. Noth
 
 | What | Found by | Fixed by |
 |---|---|---|
-| A non-party paying, declining or cancelling someone else's request got 404, the spec says 403 | implementer's own probe run (S1-152) | `3f766d4`; analyst tightened the probe `07b53b2` |
+| A non-party paying, declining or cancelling someone else's request got 404, the spec says 403 (S1-152) | a **shipped check's failure output** — our probe accepted either code | `3f766d4`; analyst tightened the probe to exactly 403 `07b53b2` |
 | Reset time grew with the number of distinct seeded passwords; a signup racing a reset could land in the wrong state | reviewer, stage 1 notes 1–2 | `d1be8d8`, then stage-2 ledger rows + probes `68d4beb` |
-| Request lists missing when empty; `/login` and `/signup` not rendered for a signed-in browser | implementer, ledger gaps from failing checks' output | `50a09fa` (implemented from the spec route table and "current-user visible on every screen when signed in") |
+| Request lists missing when empty; `/login` and `/signup` not rendered for a signed-in browser | **shipped checks' failure output** — the ledger rows existed (S2-002/006/007/057/064), our probes missed both; for the second, the implementer read the test's traceback | `50a09fa` |
 | A literal `null` rendered in the requests and balance cards | implementer, before review | `b9dd8bd` |
 | Paying a request from `/requests` was always public; hold headlines ignored the hold's status | reviewer, stage 2 notes 1–2 | `4d44098`, then stage-3 rows `f1055c3` |
-| Statement snapshots kept fully materialised forever — heap exhaustion under load | reviewer, stage 3 note 1 | `88070ae` (compact, recomputed on demand), stage-4 row S4-071 + memory probe |
+| Statement snapshots kept fully materialised forever — heap exhaustion under load (the process died, exit 139) | reviewer's own load scenario, stage 3 — **but graded a non-blocking note and accepted**, against its mandate ("accept only when every check passes"): a crash is a 5xx | `88070ae` (compact snapshots recomputed on demand **and** a raised Node heap limit, 1,536 MB), stage-4 row S4-071 + memory probe, re-verified in round 2 |
 | A lost response on request-pay removed the Pay button, so the retry could not reuse the key | implementer | `425311d` |
 
 Waived with reasons (run log): `minor_units` accepted 0–8 though the spec lists 0/2/3;
-seeded password hashes use a lower scrypt cost (still salted scrypt).
+seeded password hashes use a lower scrypt cost (N = 1024, still salted scrypt) — the price
+of fixing the reset-time note, and a security weakening we list under limitations.
+
+**Probe recall, measured:** three times a shipped check failed before our probes did (the
+403 above and the two stage-2 screens). The ledger had the rows; the probes did not assert
+them sharply enough. That is our best estimate of how the hidden suites will treat stages 3
+and 4, where only 9 % and 16 % of the checks ship.
 
 ## What we tried that failed (earlier runs of this factory)
 
@@ -122,6 +131,14 @@ seeded password hashes use a lower scrypt cost (still salted scrypt).
   - one 1,748-line server file, no unit tests → *modules, ≤ ~500 lines, unit tests*.
   Its export also dropped statement snapshots (S4-045) → *export rows per kind of state*.
   Run 2's room and history are in `factory/history/run-2/`.
+- **This run (v3) — what the audit found** and the line we would add next:
+  - a crash under load graded "non-blocking" → *any crash or 5xx is a REJECT*;
+  - a test's source read through a failure traceback → *run checks with `--tb=line`*;
+  - commits split after the fact (4–6 commits in the same minute per stage) rather than
+    built item by item → *commit as each ledger group passes its probes*;
+  - seat interference: the analyst once sent a literal `<HASH>` placeholder, and the
+    implementer reset a container the reviewer was using → *each seat names its own
+    containers; never send a placeholder*.
 - **Toy rehearsal** (organizers' counter track): duplicate review handoffs and review
   evidence left outside the repository → single handoff rule, reviews as commits.
 - Forbidding the ask-the-human tool on headless Claude Code seats: Band refuses to start
@@ -153,6 +170,9 @@ synchronously on the event loop, which is the concurrency story. Unit tests: `te
 
 Point the same mandates at another problem by changing only that one message.
 `factory/genericity/` holds the toy-track rehearsal room and the mandate diff since then.
+The v3 mandates themselves have run only on this track; the toy run used an earlier
+revision. The coordinator's five messages to the human are status reports; none asked for
+anything, and the human sent nothing after the dispatch.
 
 ## Limitations
 
@@ -164,3 +184,4 @@ Point the same mandates at another problem by changing only that one message.
 - Implementer and reviewer run the same model; the reviewer's independence is procedural.
 - The analyst dominates spend; a ★-rows-only ledger would be cheaper and weaker.
 - UI quality is judged by the reviewer and headless-browser probes, not by a designer.
+- Seeded password hashes use scrypt N = 1024 (waived note) — weaker than signup hashes.

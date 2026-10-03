@@ -18,8 +18,9 @@ and accept only a commit that shows evidence for it.
 `harness run --all --mode isolated` on a fresh clone: every folder claims its own stage.
 One human message started the run (`room.json`, its only human message); 2 h 39 min later
 the coordinator posted the run summary. Model spend $60.32 (Band's list-price estimate; $0
-cash — existing subscriptions). The room log shows no tool call that opened a shipped test
-file. Ledger: 559 rows, 344 ★, 0 known gaps. Stages 3 and 4 of pocketful specify API
+cash — existing subscriptions). Ledger: 559 rows, 344 ★, 0 known gaps; FACTORY.md lists
+what the audit of this run still found (a crash graded as a note, a test read through a
+failure traceback). Stages 3 and 4 of pocketful specify API
 behaviour only; the stage-2 screens carry forward.
 
 ## How to read this repository
