@@ -26,10 +26,11 @@ export function walletPage(main, me) {
       rows.push(h('div', { class: 'stat' }, h('dt', {}, 'On hold'),
         h('dd', { class: 'stat-held', testid: 'wallet-held', 'data-amount': String(m.held) }, fmt(m.held))));
     }
-    balanceBody.replaceChildren(
+    balanceBody.replaceChildren(...[
       h('p', { class: 'headline', testid: 'wallet-available', 'data-amount': String(m.available) }, fmt(m.available)),
       h('dl', { class: 'stats' }, rows),
-      m.held > 0 ? h('p', { class: 'hint' }, 'Money on hold is reserved for open holds and can’t be spent until it’s captured or released.') : null);
+      m.held > 0 ? h('p', { class: 'hint' }, 'Money on hold is reserved for open holds and can’t be spent until it’s captured or released.') : null,
+    ].filter(Boolean));
   }
 
   // --- feed
