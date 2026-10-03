@@ -61,10 +61,11 @@ function newRequest(state, requester, payer, amount, note, createdAt) {
   });
 }
 
-// Lookup for pay/decline/cancel: unknown or not a party -> 404; wrong party -> 403.
+// Lookup for pay/decline/cancel: unknown -> 404; anyone but the required party
+// ("The caller is not the request's payer | 403") -> 403.
 function partyRequest(state, caller, id, role) {
   const r = state.requests.get(id);
-  if (!r || (r.payer !== caller.id && r.requester !== caller.id)) throw notFound('no such request');
+  if (!r) throw notFound('no such request');
   if (r[role] !== caller.id) throw forbidden(`only the ${role} may do this`);
   return r;
 }
