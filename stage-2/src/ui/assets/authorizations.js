@@ -12,6 +12,23 @@ const STATUS = {
   expired: { kind: 'danger', word: 'Expired' },
 };
 
+// Headline that reads right for the hold's direction and status.
+function headline(a, outgoing) {
+  const them = `@${outgoing ? a.to_handle : a.from_handle}`;
+  const lines = outgoing ? {
+    open: `You’re holding money for ${them}`,
+    captured: `${them} collected your hold`,
+    voided: `You released your hold for ${them}`,
+    expired: `Your hold for ${them} expired`,
+  } : {
+    open: `${them} is holding money for you`,
+    captured: `You collected a hold from ${them}`,
+    voided: `${them} released their hold for you`,
+    expired: `A hold from ${them} expired`,
+  };
+  return lines[a.status] || (outgoing ? `Hold for ${them}` : `Hold from ${them}`);
+}
+
 export function authorizationsPage(main, me) {
   const mu = me.minor_units;
   const fmt = (v) => formatAmount(v, mu, me.currency);
@@ -76,7 +93,7 @@ export function authorizationsPage(main, me) {
     return h('li', { class: `item status-${a.status}`, testid: `authorization-item-${id}`, 'data-status': a.status },
       h('span', { class: `avatar avatar-${outgoing ? 'out' : 'in'}`, 'aria-hidden': 'true' }, outgoing ? '↑' : '↓'),
       h('div', { class: 'item-main' },
-        h('p', { class: 'item-title' }, outgoing ? `You’re holding money for @${a.to_handle}` : `@${a.from_handle} is holding money for you`),
+        h('p', { class: 'item-title' }, headline(a, outgoing)),
         a.note ? h('p', { class: 'item-note' }, a.note) : null,
         h('p', { class: 'item-meta' }, badge(st.kind, st.word),
           badge(a.visibility === 'private' ? 'private' : 'public', a.visibility === 'private' ? 'Private' : 'Public'),

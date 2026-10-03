@@ -1,9 +1,9 @@
 // "/requests" — incoming and outgoing requests with pay, decline and cancel.
 
 import { h, messageSlot } from './dom.js';
-import { api, errorMessage, newKey, UncertainError } from './api.js';
+import { api, errorMessage, Submission, UncertainError } from './api.js';
 import { formatAmount, humanTime } from './money.js';
-import { pageHeader, card, busy, badge, loading, empty } from './layout.js';
+import { pageHeader, card, busy, badge, loading, empty, visibilityField } from './layout.js';
 
 const STATUS = {
   pending: { kind: 'pending', word: 'Pending' },
@@ -18,6 +18,8 @@ export function requestsPage(main, me) {
   const error = messageSlot('request-error', 'error');
   const done = messageSlot('request-success', 'success');
   let seq = 0;
+  const payments = new Map();   // request id -> Submission (same key and body on retry)
+  const chosen = new Map();     // request id -> visibility picked by the payer, kept across re-renders
 
   async function load() {
     const mine = ++seq;
@@ -53,8 +55,13 @@ export function requestsPage(main, me) {
     const id = q.request_id;
     const actions = [];
     if (q.status === 'pending' && incoming) {
-      actions.push(
-        h('button', { type: 'button', class: 'btn btn-primary btn-small', testid: `request-pay-${id}`, onclick: (e) => act(e.currentTarget, 'pay', q) }, 'Pay'),
+      // The payer chooses the payment's visibility when the money moves.
+      const vis = visibilityField(`request-visibility-${id}`);
+      vis.input.value = chosen.get(id) || 'public';
+      vis.input.addEventListener('change', () => chosen.set(id, vis.input.value));
+      vis.wrap.classList.add('field-inline');
+      actions.push(vis.wrap,
+        h('button', { type: 'button', class: 'btn btn-primary btn-small', testid: `request-pay-${id}`, onclick: (e) => act(e.currentTarget, 'pay', q, vis.input.value) }, 'Pay'),
         h('button', { type: 'button', class: 'btn btn-secondary btn-small', testid: `request-decline-${id}`, onclick: (e) => act(e.currentTarget, 'decline', q) }, 'Decline'));
     } else if (q.status === 'pending') {
       actions.push(h('button', { type: 'button', class: 'btn btn-secondary btn-small', testid: `request-cancel-${id}`, onclick: (e) => act(e.currentTarget, 'cancel', q) }, 'Cancel request'));
@@ -69,21 +76,31 @@ export function requestsPage(main, me) {
       h('p', { class: `item-amount amount-${incoming ? 'out' : 'in'}` }, h('span', { testid: `request-amount-${id}` }, fmt(q.amount))));
   }
 
-  async function act(button, action, q) {
+  async function act(button, action, q, visibility) {
     done.clear();
+    let attempt = null;
+    if (action === 'pay') {
+      if (!payments.has(q.request_id)) payments.set(q.request_id, new Submission());
+      attempt = payments.get(q.request_id).plan({ visibility });
+      if (!attempt) return;
+    }
     await busy(button, action === 'pay' ? 'Paying…' : action === 'decline' ? 'Declining…' : 'Cancelling…', async () => {
       try {
-        const opts = action === 'pay' ? { body: {}, key: newKey() } : { body: {} };
+        const opts = action === 'pay' ? { body: { visibility }, key: attempt.key } : { body: {} };
         const r = await api('POST', `/requests/${encodeURIComponent(q.request_id)}/${action}`, opts);
+        if (attempt) payments.get(q.request_id).settle(r.ok ? 'ok' : 'refused');
         if (r.ok) {
           error.clear();
-          done.show(action === 'pay' ? `Paid ${fmt(q.amount)} to @${q.requester_handle}.`
+          done.show(action === 'pay' ? `Paid ${fmt(q.amount)} to @${q.requester_handle}${visibility === 'private' ? ' privately' : ''}.`
             : action === 'decline' ? 'Request declined.' : 'Request cancelled.');
         } else {
           error.show(errorMessage(r, 'That action was refused.'));
         }
       } catch (e) {
-        error.show('We couldn’t confirm that action. Refresh the list to see the latest state.');
+        if (attempt) payments.get(q.request_id).settle('uncertain');
+        error.show(action === 'pay'
+          ? 'We couldn’t confirm this payment. Press “Pay” again to retry safely; you will never be charged twice.'
+          : 'We couldn’t confirm that action. Refresh the list to see the latest state.');
       }
     });
     await load();

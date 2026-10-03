@@ -179,3 +179,5 @@ select.input { appearance: auto; }
   .item { grid-template-columns: auto minmax(0, 1fr); }
   .item-amount { grid-column: 2; text-align: left; }
 }
+.field-inline { flex: 1 1 14rem; max-width: 20rem; }
+.field-inline .label { font-size: .85rem; }
