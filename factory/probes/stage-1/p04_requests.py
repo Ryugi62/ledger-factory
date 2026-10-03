@@ -102,7 +102,7 @@ def pay_error_cases_and_late_funds():
     # not the payer: requester, third party
     expect(w.payreq("bob", rid), 403, "forbidden")
     r = w.payreq("cy", rid)
-    assert r.status in (403, 404) and r.code in ("forbidden", "not_found"), r
+    expect(r, 403, "forbidden")      # an existing request, caller is neither party
     expect(w.payreq("ada", "rq_missing"), 404, "not_found")
     # money arrives later: the same request becomes payable
     T(w.pay("cy", "ada", 400))
@@ -130,7 +130,7 @@ def decline_semantics():
     expect(w.decline("bob", rid), 403, "forbidden")           # requester may not decline
     assert w.request_by_id("ada", rid)["status"] == "pending"
     r = w.decline("cy", rid)
-    assert r.status in (403, 404), r
+    expect(r, 403, "forbidden")      # an existing request, caller is neither party
     expect(w.decline("ada", "rq_missing"), 404, "not_found")
     j = T(w.decline("ada", rid), 200)
     check_request(j, "bob", "ada", 100, "", "declined")
@@ -159,7 +159,7 @@ def cancel_semantics():
     rid = q["request_id"]
     expect(w.cancel("ada", rid), 403, "forbidden")             # payer may not cancel
     r = w.cancel("cy", rid)
-    assert r.status in (403, 404), r
+    expect(r, 403, "forbidden")      # an existing request, caller is neither party
     expect(w.cancel("bob", "rq_missing"), 404, "not_found")
     j = T(w.cancel("bob", rid), 200)
     check_request(j, "bob", "ada", 100, "", "cancelled")

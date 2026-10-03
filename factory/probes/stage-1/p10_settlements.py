@@ -36,7 +36,7 @@ def only_operators_may_settle_and_operators_gain_nothing_else():
     assert private not in w.activity_ids("dee")
     for fn in (lambda: w.payreq("dee", rq), lambda: w.decline("dee", rq), lambda: w.cancel("dee", rq)):
         r = fn()
-        assert r.status in (403, 404), r
+        expect(r, 403, "forbidden")
     assert w.request_by_id("ada", rq)["status"] == "pending"
     # operator permission is reset with the fixture
     w2 = World(operators=[])

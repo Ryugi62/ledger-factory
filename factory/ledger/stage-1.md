@@ -27,9 +27,11 @@ ledger must point back at this file and re-run `run_all.py` from `factory/probes
 6. **`note` length** (§8): 200 *characters* (Unicode code points); 200 × `é` and 200 × emoji must pass, 201 fail.
 7. **Optional `note`** on `POST /requests`, `POST /splits` defaults to `""` (stated only for payments); the
    payment created by paying a request carries an unspecified note — probes do not assert it.
-8. **Third party** calling pay/decline/cancel on a request they are not party to: 403 or 404 both accepted;
-   the other party (requester paying, payer cancelling) must get 403. Order of checks: permission (403) before
-   state (409 `request_not_pending`) before funds (409 `insufficient_funds`).
+8. **Third party** calling pay/decline/cancel on an existing request they are not party to: exactly 403
+   `forbidden` (§8 tables: "The caller is not the request's payer / requester | 403 forbidden"); an unknown id is
+   404. The requester paying/declining and the payer cancelling also get 403. Order of checks: permission (403)
+   before state (409 `request_not_pending`) before funds (409 `insufficient_funds`). *(Tightened from "403 or 404"
+   at the coordinator's request.)*
 9. **Splits**: `n` is the number of listed handles (the caller counts only if listed); a split moves no money.
    Paying a 0-share request is unspecified; probes never do it.
 10. **Same-second ordering**: `GET /activity` ties are unspecified (§8); `GET /requests` is "newest first" and is
@@ -180,7 +182,7 @@ ledger must point back at this file and re-run `run_all.py` from `factory/probes
 | S1-149 | §8 | Payments visible to the caller by the feed contract in §4, newest first by `created_at`. { "payments": [ { ...payment... } ], "has_more": false } | behaviour | `p06_feed.feed_contract_public_or_party`, `p06_feed.feed_order_limit_offset_has_more` |
 | S1-150 | §8 | `limit` and `offset` behave exactly as in `GET /requests`. | behaviour | `p06_feed.feed_order_limit_offset_has_more` |
 | S1-151 | §8 | The relative order of two payments created within the same second is unspecified. Stable pagination during concurrent writes is not required for this endpoint. (not asserted: probes space writes ≥1.1 s apart when order matters) | behaviour | manual — unspecified by the spec; deliberately not asserted |
-| S1-152 | §8 | ★ (derived readings, §4/§8 tables) a non-party calling pay/decline/cancel gets 403 or 404; `request_not_pending` is decided before `insufficient_funds`; `forbidden` is decided before `request_not_pending`. | error | `p04_requests.pay_error_cases_and_late_funds` |
+| S1-152 | §8 | ★ (derived readings, §4/§8 tables) a non-party (including a settlement operator) calling pay/decline/cancel on an existing request gets exactly 403 `forbidden` (unknown id: 404); `request_not_pending` is decided before `insufficient_funds`; `forbidden` is decided before `request_not_pending`. | error | `p04_requests.pay_error_cases_and_late_funds` |
 | S1-160 | §9 | Shares must be whole minor units, sum exactly to `amount` and differ by at most one minor unit. | behaviour | `p05_splits_money.equal_split_rounding_table_and_ordering`, `p05_splits_money.many_splits_paid_in_full_conserve_the_total` |
 | S1-161 | §9 | ★ When the amount does not divide evenly, the larger shares go to the first participants in `participant_handles` order. | behaviour | `p05_splits_money.equal_split_rounding_table_and_ordering` |
 | S1-162 | §9 | ★ Splitting the same amount among the same people in a different `participant_handles` order gives the extra unit to a different person. | behaviour | `p05_splits_money.equal_split_rounding_table_and_ordering` |
