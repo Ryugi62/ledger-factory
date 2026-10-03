@@ -23,7 +23,7 @@ S1 = os.path.abspath(os.path.join(HERE, "..", "stage-1"))
 sys.path[:0] = [HERE, S1]
 
 S2_MODULES = ["s2_01_fixture_me", "s2_02_authorizations", "s2_03_idem_conc", "s2_04_export",
-              "s2_05_ui_core", "s2_06_ui_flows", "s2_07_ui_auth_quality"]
+              "s2_05_ui_core", "s2_06_ui_flows", "s2_07_ui_auth_quality", "s2_08_review_notes"]
 S1_MODULES = ["p01_runtime", "p02_auth", "p03_payments", "p04_requests", "p05_splits_money", "p06_feed",
               "p07_idempotency", "p08_concurrency", "p09_export", "p10_settlements"]
 # stage-1 probes whose assertion legitimately changes in stage 2 (GET /me gained fields): replaced by S2-098

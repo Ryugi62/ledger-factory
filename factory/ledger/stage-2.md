@@ -270,11 +270,15 @@ Stage-1 rows not listed are unchanged and are covered by re-running the stage-1 
 | S2-230 | stage-1 §2 | ★ Runtime assets and dependencies must be included in the image. This includes fonts, scripts and stylesheets; external services are unavailable at runtime. (UI: every request a screen makes stays on the service's own origin; no failed loads or script errors.) | limit | `s2_07_ui_auth_quality.ui_is_self_contained_and_loads_cleanly` |
 | S2-231 | §constraint | Docker image, HTTP + browser UI; 2 vCPU/2 GiB; per-request timeout 5 s (stage-1 §2) — UI asset delivery included. | limit | manual — reviewer runs the image with `--cpus 2 --memory 2g --network none` and re-runs this runner (the probes time every API call; the browser probes would fail on slow pages) |
 | S2-232 | — | Review notes from earlier stages: none forwarded for stage 2 (the stage-1 non-party 403 tightening is applied in the stage-1 ledger, commit 07b53b2). | review-note | manual — none for stage 2 |
+| S2-233 | stage-1 review | ★ (review note 1) `/_test/reset` must stay within its 10 s limit even for large fixtures (1000 users with distinct passwords: seeded password hashing must not push reset past 10 s); export and import of such a state too; a fixture with hundreds of seeded holds too. | review-note | `s2_08_review_notes.reset_export_import_stay_within_10_seconds_for_1000_distinct_password_users` |
+| S2-234 | stage-1 review | ★ (review note 2) a signup that overlaps a `/_test/reset` must not leak its account into the fresh fixture. Reading: a signup request that arrived ≥30 ms before the reset and is still in flight must be gone once the reset returned (login 401, its token 401, email and handle free again); the fresh fixture is intact. | review-note | `s2_08_review_notes.a_signup_overlapping_a_reset_does_not_leak_into_the_fresh_fixture` |
+| S2-235 | stage-1 review | ★ (review note 2) overlapping resets apply in request order — the last-arriving reset wins deterministically (A, B, C staggered 50 ms apart: only C's users exist afterwards); two simultaneous resets never leave a mixture of both fixtures. | review-note | `s2_08_review_notes.overlapping_resets_apply_in_request_order_last_arriving_wins` |
+| S2-236 | stage-1 review | (review note 3) `minor_units` outside 0/2/3 — waived by the coordinator (the spec lists 0, 2, 3 only); no probe. | review-note | manual — waived by coordinator |
 
 ## Summary
 
 Row counts by kind: UI-state 96, behaviour 41, data-migration 18, error 17, time 8, idempotency 7, concurrency 5,
-limit 2, review-note 1 (195 rows). ★ rows: 104. Rows with a `manual` component: 15 (visual judgement, stage-1 export
+limit 2, review-note 5 (199 rows). ★ rows: 107. Rows with a `manual` component: 16 (visual judgement, stage-1 export
 import, container limits, scoping statements).
 
 Data-migration rows by state kind: authorizations (S2-210), holds (S2-211), capture records (S2-212), captured

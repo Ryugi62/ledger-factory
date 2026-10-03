@@ -8,7 +8,7 @@ os.environ.setdefault("BASE_URL", "http://127.0.0.1:1")
 import kit  # noqa: E402
 import lib  # noqa: E402
 MODS = ["s2_01_fixture_me", "s2_02_authorizations", "s2_03_idem_conc", "s2_04_export", "s2_05_ui_core", "s2_06_ui_flows",
-        "s2_07_ui_auth_quality"]
+        "s2_07_ui_auth_quality", "s2_08_review_notes"]
 for m in MODS:
     importlib.import_module(m)
 declared = {}
